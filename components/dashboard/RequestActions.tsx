@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { updateRequestStatus } from './actions';
+import { updateRequestStatus } from '@/app/user/dashboard/actions';
 
 export default function RequestActions({ requestId }: { requestId: string }) {
   const [loadingAction, setLoadingAction] = useState<'ACCEPT' | 'REJECT' | null>(null);
