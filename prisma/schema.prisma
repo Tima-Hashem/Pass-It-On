@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model User {
+  id                  String              @id @default(uuid())
+  email               String              @unique
+  name                String
+  passwordHash        String
+  bio                 String?
+  isAcceptingMentees  Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  skills              String[]            @default([])
+  certifications      Certification[]
+  mentorshipsAsMentee Mentorship[]        @relation("MenteeRelation")
+  mentorshipsAsMentor Mentorship[]        @relation("MentorRelation")
+  requestsAsMentee    MentorshipRequest[] @relation("MenteeRequests")
+  requestsAsMentor    MentorshipRequest[] @relation("MentorRequests")
+  userSkills          UserSkill[]
+}
+
+model Skill {
+  id          String              @id @default(uuid())
+  name        String              @unique
+  description String?
+  createdAt   DateTime            @default(now())
+  certs       Certification[]
+  mentorships Mentorship[]
+  requests    MentorshipRequest[]
+  users       UserSkill[]
+}
+
+model MentorshipRequest {
+  id        String        @id @default(uuid())
+  menteeId  String
+  mentorId  String
+  skillId   String
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  mentee    User          @relation("MenteeRequests", fields: [menteeId], references: [id], onDelete: Cascade)
+  mentor    User          @relation("MentorRequests", fields: [mentorId], references: [id], onDelete: Cascade)
+  skill     Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([menteeId, mentorId, skillId])
+}
+
+model UserSkill {
+  id        String   @id @default(uuid())
+  userId    String
+  skillId   String
+  createdAt DateTime @default(now())
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+}
+
+model Mentorship {
+  id        String              @id @default(uuid())
+  menteeId  String
+  mentorId  String
+  skillId   String
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  cert      Certification?
+  mentee    User                @relation("MenteeRelation", fields: [menteeId], references: [id])
+  mentor    User                @relation("MentorRelation", fields: [mentorId], references: [id])
+  skill     Skill               @relation(fields: [skillId], references: [id])
+  projects  ProjectSubmission[]
+
+  @@unique([menteeId, mentorId, skillId])
+}
+
+model ProjectSubmission {
+  id              String        @id @default(uuid())
+  mentorshipId    String
+  title           String
+  description     String
+  githubUrl       String
+  liveDemoUrl     String?
+  additionalLinks String?
+  status          ProjectStatus @default(SUBMITTED)
+  mentorFeedback  String?
+  adminFeedback   String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  mentorship      Mentorship    @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+}
+
+model Certification {
+  id            String     @id @default(uuid())
+  userId        String
+  skillId       String
+  mentorshipId  String     @unique
+  issueDate     DateTime   @default(now())
+  certificateId String     @unique @default(uuid())
+  mentorship    Mentorship @relation(fields: [mentorshipId], references: [id])
+  skill         Skill      @relation(fields: [skillId], references: [id])
+  user          User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, skillId])
+}
+
+enum ProjectStatus {
+  SUBMITTED
+  MENTOR_APPROVED
+  ADMIN_APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
