@@ -26,7 +26,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <Link href="/admin/dashboard" className="border-transparent text-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                   User Management
                 </Link>
-                {/* Future Admin links can go here (e.g. Project Approvals) */}
+                <Link href="/admin/project-review" className="border-transparent text-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                  Project Review
+                </Link>
               </div>
             </div>
             <div className="flex items-center">
