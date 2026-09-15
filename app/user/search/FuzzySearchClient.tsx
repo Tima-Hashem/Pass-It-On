@@ -47,7 +47,7 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
   const fuse = useMemo(() => {
     return new Fuse(skills, {
       keys: ['name', 'description'], // Search across both name and description
-      threshold: 0.3, // 0.0 is a perfect match, 1.0 matches anything. 0.3 allows slight typos.
+      threshold: 0.6, // Increased threshold for "extra fuzz"
       includeScore: true,
     });
   }, [skills]);
@@ -56,10 +56,13 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
   // SEARCH EXECUTION
   // ---------------------------------------------------------------------------
   // If the user has typed something, we run the fuzzy search.
-  // Otherwise, we just return the full list of skills.
+  // Otherwise, we just return the first 5 skills as suggestions.
+  // Results are strictly limited to a maximum of 5 items for a cleaner UI.
   const searchResults = useMemo(() => {
-    if (!query) return skills.map(skill => ({ item: skill }));
-    return fuse.search(query);
+    if (!query) {
+      return skills.slice(0, 5).map(skill => ({ item: skill }));
+    }
+    return fuse.search(query).slice(0, 5);
   }, [query, fuse, skills]);
 
   // ---------------------------------------------------------------------------
@@ -90,10 +93,12 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="e.g. React, Python, Figma..." 
-          className="w-full border border-slate-300 p-4 rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm text-lg"
+          className="w-full border border-slate-300 p-4 rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm text-lg pl-4 pr-12"
         />
         <div className="absolute right-4 top-4 text-slate-400">
-          🔍
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
       </div>
 
@@ -103,7 +108,7 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
       */}
       <div>
         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-          {query ? 'Search Results' : 'All Available Skills'}
+          {query ? 'Search Results (Top 5)' : 'Suggested Skills'}
         </h3>
         
         {searchResults.length === 0 ? (
