@@ -1,0 +1,6 @@
+{
+  "name": "PassItOn",
+  "description": "A skill mentorship platform for students to connect, learn, and mentor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

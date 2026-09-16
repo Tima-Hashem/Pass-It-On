@@ -1,6 +1,6 @@
 'use client'; // Required for Next.js to run this as a client component with hooks.
 
-import { useActionState, useRef } from 'react';
+import { useActionState, useRef, useEffect } from 'react';
 import { createStudentAction } from '../actions';
 
 /**
@@ -23,10 +23,15 @@ export default function CreateStudentForm({ availableSkills }: CreateStudentForm
   const [state, formAction, isPending] = useActionState(createStudentAction, null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // If successful, reset the form completely
-  if (state?.success && formRef.current) {
-    formRef.current.reset();
-  }
+  /**
+   * Reset form fields safely after successful submission.
+   * Executed via useEffect rather than during component render to comply with React 19 rules.
+   */
+  useEffect(() => {
+    if (state?.success && formRef.current) {
+      formRef.current.reset();
+    }
+  }, [state?.success]);
 
   // ---------------------------------------------------------------------------
   // RENDER UI

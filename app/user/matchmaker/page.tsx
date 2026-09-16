@@ -1,207 +1,293 @@
-'use client'; // Client Component because it manages chat state and user inputs
+'use client';
+
+/**
+ * AI Matchmaker Client Page
+ * 
+ * Interactive Chat UI connecting students with mentors through intelligent AI analysis.
+ * 
+ * Features:
+ * - Multi-turn conversational flow grounded in platform mentors & skills
+ * - Quick prompt starter chips for instant one-click queries
+ * - Mentorship economy notice when student owes mentorships
+ * - Live mentor recommendation cards with 1-click mentorship request capability
+ * - Auto-scrolling, typing state indicators, and responsive mobile-first layout
+ */
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { getAIResponse } from './actions';
+import { getAIResponse, type RecommendedMentor } from './actions';
+import MatchmakerMentorCard from './MatchmakerMentorCard';
+import { Sparkles, ArrowLeft, Send, Compass, BookOpen, AlertTriangle } from 'lucide-react';
 
-/**
- * Message Interface
- * Represents a single message in the chat timeline.
- */
-interface Message {
+interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  recommendations?: RecommendedMentor[];
+  notice?: string;
 }
 
+const STARTER_PROMPTS = [
+  'I want to master React and build modern web apps',
+  'Who can mentor me in Python and Machine Learning?',
+  'Looking for a mentor to guide my portfolio project',
+  'I need help with Node.js and PostgreSQL backend APIs',
+];
+
 export default function MatchmakerPage() {
-  // ---------------------------------------------------------------------------
-  // STATE MANAGEMENT
-  // ---------------------------------------------------------------------------
-  
-  // Stores the entire conversation history. We initialize it with a greeting from the AI.
-  const [messages, setMessages] = useState<Message[]>([
+  // Conversation timeline state
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: '1',
+      id: 'init-1',
       role: 'assistant',
-      content: "Hi! I'm your AI Matchmaker. Tell me a bit about what you want to learn, your current skill level, and any specific goals you have. I'll help pair you with the perfect mentor!"
-    }
+      content:
+        "Hi! I'm your AI Matchmaker on PassItOn. Tell me about what you'd like to learn, your current background, or any target projects you want to build. I'll recommend the best mentors from our verified community!",
+    },
   ]);
-  
-  // Tracks the current text inside the input box
+
+  // Input state
   const [inputValue, setInputValue] = useState('');
-  
-  // Tracks if we are waiting for the AI to respond, used to disable the input/button
   const [isLoading, setIsLoading] = useState(false);
 
-  // Reference to the bottom of the chat to auto-scroll when new messages arrive
+  // Auto-scroll ref
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const msgCounterRef = useRef(1);
 
-  // ---------------------------------------------------------------------------
-  // AUTO-SCROLL EFFECT
-  // ---------------------------------------------------------------------------
-  // Every time the `messages` array changes, scroll the chat container to the bottom.
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTo({
         top: chatContainerRef.current.scrollHeight,
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  // ---------------------------------------------------------------------------
-  // EVENT HANDLERS
-  // ---------------------------------------------------------------------------
-  
   /**
-   * handleSendMessage
-   * 
-   * Triggered when the user clicks 'Send' or presses 'Enter'.
-   * It pushes the user's message to local state and calls the separated Server Action.
+   * Dispatches the user's message to the server-side AI matchmaker action
    */
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
+  const submitMessage = async (textToSend: string) => {
+    if (!textToSend.trim() || isLoading) return;
 
-    // 1. Create the new user message object
-    const userMessage: Message = {
-      id: Date.now().toString(),
+    msgCounterRef.current += 1;
+    const userMsgId = `user-msg-${msgCounterRef.current}`;
+
+    const userMessage: ChatMessage = {
+      id: userMsgId,
       role: 'user',
-      content: inputValue.trim()
+      content: textToSend.trim(),
     };
 
-    // 2. Append to UI immediately, lock input, clear box
-    const currentMessages = [...messages, userMessage];
-    setMessages(currentMessages);
-    setInputValue(''); 
-    setIsLoading(true); 
+    const updatedHistory = [...messages, userMessage];
+    setMessages(updatedHistory);
+    setInputValue('');
+    setIsLoading(true);
 
     try {
-      // 3. Call the separated AI Server Action from actions.ts
-      // We pass the new message and the entire conversation history (mapped to standard roles)
-      const historyContext = currentMessages.map(msg => ({ role: msg.role, content: msg.content }));
-      
-      const aiResponseText = await getAIResponse(userMessage.content, historyContext);
-      
-      // 4. Append AI response to UI
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: aiResponseText
-      };
-      setMessages(prev => [...prev, aiMessage]);
+      const historyContext = updatedHistory.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-    } catch (error) {
-      console.error("Failed to fetch AI response:", error);
-      // Optional: Add error handling UI state here later
+      const res = await getAIResponse(userMessage.content, historyContext);
+
+      msgCounterRef.current += 1;
+      const aiMessage: ChatMessage = {
+        id: `ai-msg-${msgCounterRef.current}`,
+        role: 'assistant',
+        content: res.text,
+        recommendations: res.recommendations,
+        notice: res.mentorshipOwedNotice,
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (err) {
+      console.error('Failed to get matchmaker response:', err);
+      msgCounterRef.current += 1;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-err-${msgCounterRef.current}`,
+          role: 'assistant',
+          content: "I had trouble connecting to the mentor database. Please try again or browse mentors directly from the search tab.",
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // RENDER UI
-  // ---------------------------------------------------------------------------
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitMessage(inputValue);
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] max-w-4xl mx-auto bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
       
-      {/* --- HEADER --- */}
+      {/* Header Bar */}
       <div className="bg-slate-900 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Back Button */}
-          <Link href="/user/search" className="text-slate-400 hover:text-white transition-colors">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/user/search"
+            id="back-to-search-btn"
+            className="text-slate-400 hover:text-white transition-colors p-1 -ml-1 rounded-lg hover:bg-slate-800"
+            title="Back to manual search"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-lg sm:text-xl font-bold text-white flex items-center gap-1.5 sm:gap-2">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            AI Matchmaker
-          </h1>
+          <div>
+            <h1 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              AI Matchmaker
+            </h1>
+            <p className="text-xs text-slate-400 hidden sm:block">
+              Pairing you with experienced peer mentors based on your learning goals
+            </p>
+          </div>
         </div>
+
+        <Link
+          href="/user/search"
+          className="text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors"
+        >
+          Browse All Mentors
+        </Link>
       </div>
 
-      {/* --- CHAT AREA --- */}
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6 bg-slate-50">
+      {/* Messages Timeline */}
+      <div
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-slate-50"
+      >
         {messages.map((msg) => {
           const isUser = msg.role === 'user';
           return (
-            <div key={msg.id} className={`flex gap-3 sm:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-              
-              {/* Avatar */}
+            <div
+              key={msg.id}
+              className={`flex gap-3 sm:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+            >
+              {/* Avatar Icon */}
               <div className="flex-shrink-0">
                 {isUser ? (
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs sm:text-sm">
-                    ME
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-800 text-white font-semibold text-xs flex items-center justify-center shadow-xs">
+                    YOU
                   </div>
                 ) : (
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md">
-                    <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                    <Sparkles className="w-4 h-4" />
                   </div>
                 )}
               </div>
 
-              {/* Message Bubble */}
-              <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 shadow-sm text-sm sm:text-base ${
-                isUser 
-                  ? 'bg-blue-600 text-white rounded-tr-sm' 
-                  : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'
-              }`}>
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              {/* Message Bubble + Structured Recommendations */}
+              <div
+                className={`space-y-3 max-w-[85%] sm:max-w-[78%] ${
+                  isUser ? 'items-end text-right' : 'items-start'
+                }`}
+              >
+                <div
+                  className={`rounded-2xl p-4 shadow-xs text-sm sm:text-base leading-relaxed ${
+                    isUser
+                      ? 'bg-indigo-600 text-white rounded-tr-xs text-left'
+                      : 'bg-white border border-slate-200 text-slate-800 rounded-tl-xs'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                </div>
+
+                {/* Mentorship Economy Notice Banner */}
+                {msg.notice && (
+                  <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <span>{msg.notice}</span>
+                  </div>
+                )}
+
+                {/* Recommended Mentor Cards */}
+                {msg.recommendations && msg.recommendations.length > 0 && (
+                  <div className="space-y-3 pt-1 w-full text-left">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <Compass className="w-3.5 h-3.5 text-indigo-500" />
+                      Recommended Mentors from Community:
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      {msg.recommendations.map((mentor) => (
+                        <MatchmakerMentorCard key={mentor.id} mentor={mentor} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              
             </div>
           );
         })}
-        
-        {/* Loading Indicator (Shown only when awaiting AI response) */}
+
+        {/* Loading Indicator */}
         {isLoading && (
-          <div className="flex gap-3 sm:gap-4 flex-row">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white opacity-50 animate-pulse">
-               <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-               </svg>
+          <div className="flex gap-3 sm:gap-4 flex-row items-center">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center opacity-70 animate-pulse">
+              <Sparkles className="w-4 h-4" />
             </div>
-            <div className="bg-white border border-slate-200 text-slate-500 rounded-2xl rounded-tl-sm p-3 sm:p-4 shadow-sm flex items-center gap-1.5 sm:gap-2">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-300 rounded-full animate-bounce"></span>
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+            <div className="bg-white border border-slate-200 text-slate-500 rounded-2xl rounded-tl-xs p-3.5 shadow-xs flex items-center gap-2 text-xs font-medium">
+              <span>Matching against verified mentors</span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" />
+                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+              </span>
             </div>
           </div>
         )}
       </div>
 
-      {/* --- INPUT AREA --- */}
-      <div className="bg-white p-3 sm:p-4 border-t border-slate-200 flex-shrink-0">
-        <form onSubmit={handleSendMessage} className="relative flex items-center">
+      {/* Starter Suggestions & Input Form */}
+      <div className="bg-white border-t border-slate-200 p-3 sm:p-4 space-y-3 flex-shrink-0">
+        {/* Quick starter chips shown when message count is low */}
+        {messages.length <= 2 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1 flex-shrink-0">
+              <BookOpen className="w-3 h-3" /> Try:
+            </span>
+            {STARTER_PROMPTS.map((prompt, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => submitMessage(prompt)}
+                disabled={isLoading}
+                className="text-xs bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 px-3 py-1 rounded-full whitespace-nowrap transition-colors border border-slate-200 hover:border-indigo-200 disabled:opacity-50 cursor-pointer"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Input bar */}
+        <form onSubmit={handleSubmit} className="relative flex items-center">
           <input
+            id="matchmaker-user-input"
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             disabled={isLoading}
-            placeholder={isLoading ? "AI is thinking..." : "Describe what you want to learn..."}
-            className="w-full bg-slate-50 border border-slate-300 rounded-full py-3 sm:py-4 pl-4 sm:pl-6 pr-14 sm:pr-16 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
+            placeholder={isLoading ? "AI is analyzing community mentors..." : "Tell the AI what you want to learn..."}
+            className="w-full bg-slate-50 border border-slate-300 rounded-full py-3 sm:py-3.5 pl-4 sm:pl-6 pr-14 sm:pr-16 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
           />
           <button
+            id="matchmaker-send-btn"
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="absolute right-1.5 sm:right-2 w-10 h-10 sm:w-12 sm:h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+            className="absolute right-1.5 sm:right-2 w-9 h-9 sm:w-10 sm:h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-xs"
+            title="Send Message"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
+            <Send className="w-4 h-4" />
           </button>
         </form>
-        <p className="text-center text-[10px] sm:text-xs text-slate-400 mt-2 sm:mt-3 px-2">
-          AI Matchmaker can make mistakes. Verify mentor profiles before committing.
+
+        <p className="text-center text-[11px] text-slate-400">
+          PassItOn AI Matchmaker connects you directly with verified peer mentors.
         </p>
       </div>
-      
     </div>
   );
 }

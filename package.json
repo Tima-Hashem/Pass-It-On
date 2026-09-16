@@ -1,15 +1,16 @@
 {
-  "name": "unnamed",
+  "name": "pass-it-on",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@google/genai": "^2.22.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@supabase/supabase-js": "^2.109.0",
@@ -20,6 +21,7 @@
     "dotenv": "^17.4.2",
     "fuse.js": "^7.5.0",
     "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.46.0",
     "next": "16.3.5",
     "pg": "^8.23.0",
     "prisma": "^7.10.0",

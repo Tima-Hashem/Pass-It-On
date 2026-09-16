@@ -91,7 +91,8 @@ export default async function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {profile.certifications.map(cert => (
+                {/* Render list of earned certifications with explicit typing */}
+                {profile.certifications.map((cert: { id: string; skill: { name: string }; issueDate: Date }) => (
                   <div key={cert.id} className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
                     <span className="font-bold text-emerald-900">{cert.skill.name}</span>
                     <span className="text-xs text-emerald-600 font-medium">
