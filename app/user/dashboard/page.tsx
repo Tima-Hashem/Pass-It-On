@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 import EmptyState from '@/components/ui/EmptyState';
 import ActiveMentorshipCard from '@/components/cards/ActiveMentorshipCard';
@@ -16,72 +17,74 @@ export default async function DashboardPage() {
   const userId = session.userId;
 
   // ---------------------------------------------------------------------------
-  // DATA FETCHING (Optimized with Promise.all for concurrent execution)
+  // DATA FETCHING (Sequential execution to prevent connection pool exhaustion)
   // ---------------------------------------------------------------------------
-  const [currentUser, incomingRequests, outgoingRequests, activeMentorships, completedMentorships] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: { mentorshipsOwed: true }
-    }),
-    prisma.mentorshipRequest.findMany({
-      where: { mentorId: userId, status: 'PENDING' },
-      include: {
-        mentee: { select: { name: true, email: true } },
-        skill: { select: { name: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    }),
-    prisma.mentorshipRequest.findMany({
-      where: { menteeId: userId },
-      include: {
-        mentor: { select: { name: true } },
-        skill: { select: { name: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    }),
-    prisma.mentorship.findMany({
-      where: {
-        OR: [
-          { menteeId: userId },
-          { mentorId: userId }
-        ],
-        // Must be actively ongoing and NOT have an approved project
-        status: 'ACTIVE',
-        projects: { none: { status: 'ADMIN_APPROVED' } }
-      },
-      include: {
-        mentee: { select: { id: true, name: true, email: true } },
-        mentor: { select: { id: true, name: true, email: true } },
-        skill: { select: { name: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    }),
-    prisma.mentorship.findMany({
-      where: {
-        AND: [
-          {
-            OR: [
-              { menteeId: userId },
-              { mentorId: userId }
-            ]
-          },
-          {
-            OR: [
-              { status: 'COMPLETED' },
-              { projects: { some: { status: 'ADMIN_APPROVED' } } }
-            ]
-          }
-        ]
-      },
-      include: {
-        mentee: { select: { name: true } },
-        mentor: { select: { name: true } },
-        skill: { select: { name: true } },
-        cert: true
-      },
-      orderBy: { updatedAt: 'desc' }
-    })
-  ]);
+  const currentUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { mentorshipsOwed: true }
+  });
+
+  const incomingRequests = await prisma.mentorshipRequest.findMany({
+    where: { mentorId: userId, status: 'PENDING' },
+    include: {
+      mentee: { select: { name: true, email: true } },
+      skill: { select: { name: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const outgoingRequests = await prisma.mentorshipRequest.findMany({
+    where: { menteeId: userId },
+    include: {
+      mentor: { select: { name: true } },
+      skill: { select: { name: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const activeMentorships = await prisma.mentorship.findMany({
+    where: {
+      OR: [
+        { menteeId: userId },
+        { mentorId: userId }
+      ],
+      // Must be actively ongoing and NOT have an approved project
+      status: 'ACTIVE',
+      projects: { none: { status: 'ADMIN_APPROVED' } }
+    },
+    include: {
+      mentee: { select: { id: true, name: true, email: true } },
+      mentor: { select: { id: true, name: true, email: true } },
+      skill: { select: { name: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const completedMentorships = await prisma.mentorship.findMany({
+    where: {
+      AND: [
+        {
+          OR: [
+            { menteeId: userId },
+            { mentorId: userId }
+          ]
+        },
+        {
+          OR: [
+            { status: 'COMPLETED' },
+            { projects: { some: { status: 'ADMIN_APPROVED' } } }
+          ]
+        }
+      ]
+    },
+    include: {
+      mentee: { select: { name: true } },
+      mentor: { select: { name: true } },
+      skill: { select: { name: true } },
+      cert: true
+    },
+    orderBy: { updatedAt: 'desc' }
+  });
 
   // ---------------------------------------------------------------------------
   // RENDER UI
@@ -115,19 +118,28 @@ export default async function DashboardPage() {
 
       {/* --- ACTIVE MENTORSHIPS --- */}
       <section className="bg-white/50 backdrop-blur-sm border border-slate-100 rounded-3xl shadow-sm p-4 sm:p-6 md:p-8">
-        <div className="flex items-center gap-3 mb-4 sm:mb-6">
-          <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+        <Link href="/user/search" className="inline-flex items-center gap-3 mb-4 sm:mb-6 hover:opacity-80 transition-opacity cursor-pointer group">
+          <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Active Mentorships</h2>
-        </div>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+            Active Mentorships
+            <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+              Browse skills &rarr;
+            </span>
+          </h2>
+        </Link>
 
         {activeMentorships.length === 0 ? (
-          <EmptyState 
-            title="No Active Mentorships" 
-            description="You don't have any active mentorships yet. Start by sending a request or accepting one!"
-            icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>}
-          />
+          <Link href="/user/search" className="block group/empty">
+            <div className="group-hover/empty:bg-slate-50 transition-colors rounded-2xl border border-transparent group-hover/empty:border-slate-100 cursor-pointer">
+              <EmptyState 
+                title="No Active Mentorships" 
+                description="You don't have any active mentorships yet. Click here to search for a skill and send a request!"
+                icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>}
+              />
+            </div>
+          </Link>
         ) : (
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {activeMentorships.map((m) => (
