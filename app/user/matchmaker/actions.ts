@@ -471,7 +471,7 @@ if (!response) {
         id: match.mentor.id,
         name: match.mentor.name,
         bio: match.mentor.bio,
-        skills: match.mentor.skills.map((skill) => ({
+        skills: match.mentor.skills.map((skill: any) => ({
           id: skill.id,
           name: skill.name
         })),
