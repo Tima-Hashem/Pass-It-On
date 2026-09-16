@@ -356,18 +356,29 @@ for (let attempt = 1; attempt <= 3; attempt++) {
     });
         break;
   } catch (error: any) {
-    lastError = error;
+  lastError = error;
 
-    if (error?.status !== 503 || attempt === 3) {
-      throw error;
-    }
-
-    await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+  // Don't retry when the free Gemini quota is exhausted.
+  // The existing local fallback will handle the request instead.
+  if (error?.status === 429) {
+    break;
   }
+
+  if (error?.status !== 503 || attempt === 3) {
+    throw error;
+  }
+
+  await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+}
 }
 
 if (!response) {
-  throw lastError;
+  return buildFallbackResponse(
+    userMessage,
+    activeMentors,
+    learnerContext,
+    mentorshipOwedNotice
+  );
 }
 
     // ------------------------------------------------------------
