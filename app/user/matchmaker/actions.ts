@@ -305,7 +305,12 @@ Analyze the learner's request and return ONLY the structured response requested 
     // 9. Ask Gemini for structured output
     // ------------------------------------------------------------
 
-    const response = await ai.models.generateContent({
+    let response;
+let lastError;
+
+for (let attempt = 1; attempt <= 3; attempt++) {
+  try {
+    response = await ai.models.generateContent({
       model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
@@ -349,6 +354,21 @@ Analyze the learner's request and return ONLY the structured response requested 
         }
       }
     });
+        break;
+  } catch (error: any) {
+    lastError = error;
+
+    if (error?.status !== 503 || attempt === 3) {
+      throw error;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+  }
+}
+
+if (!response) {
+  throw lastError;
+}
 
     // ------------------------------------------------------------
     // 10. Parse structured response

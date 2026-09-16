@@ -416,22 +416,45 @@ function createInMemoryClient() {
           result = result.slice(0, args.take);
         }
 
-        // Resolve relations
-        return result.map(u => {
-          const mapped: any = { ...u };
-          if (args.include?.userSkills) {
-            mapped.userSkills = store.userSkills
-              .filter(us => us.userId === u.id)
-              .map(us => {
-                const item: any = { ...us };
-                if (args.include.userSkills.include?.skill) {
-                  item.skill = store.skills.find(s => s.id === us.skillId);
-                }
-                return item;
-              });
-          }
-          return mapped;
-        });
+      
+       // Resolve relations requested through include or select
+return result.map(u => {
+  const mapped: any = { ...u };
+
+  const userSkills = store.userSkills
+    .filter(us => us.userId === u.id)
+    .map(us => {
+      const item: any = { ...us };
+      const skill = store.skills.find(s => s.id === us.skillId);
+
+      if (
+        args.include?.userSkills?.include?.skill ||
+        args.select?.userSkills?.include?.skill
+      ) {
+        item.skill = skill;
+      }
+
+      return item;
+    });
+
+  if (args.include?.userSkills || args.select?.userSkills) {
+    mapped.userSkills = userSkills;
+  }
+
+  if (args.select) {
+    const selected: any = {};
+
+    for (const key of Object.keys(args.select)) {
+      if (args.select[key]) {
+        selected[key] = mapped[key];
+      }
+    }
+
+    return selected;
+  }
+
+  return mapped;
+});
       },
 
       create: async ({ data }: any) => {
