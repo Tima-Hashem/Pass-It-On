@@ -2,18 +2,17 @@
 
 import { useState } from 'react';
 import { reviewProjectAsAdmin } from './actions';
+import SubmitButton from '@/components/ui/SubmitButton';
 
 interface AdminReviewFormProps {
   projectId: string;
 }
 
 export default function AdminReviewForm({ projectId }: AdminReviewFormProps) {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   async function handleAction(formData: FormData) {
-    setLoading(true);
     setError(null);
     setSuccess(false);
 
@@ -24,8 +23,6 @@ export default function AdminReviewForm({ projectId }: AdminReviewFormProps) {
     } else {
       setSuccess(true);
     }
-    
-    setLoading(false);
   }
 
   if (success) {
@@ -54,33 +51,30 @@ export default function AdminReviewForm({ projectId }: AdminReviewFormProps) {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
-        <button 
-          type="submit" 
+        <SubmitButton 
           name="action"
           value="REJECT"
-          disabled={loading}
-          className="flex-1 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold py-3 rounded-xl transition disabled:opacity-50"
+          className="flex-1 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-bold py-3 rounded-xl transition"
+          loadingText="Rejecting..."
         >
           Reject (Cancel)
-        </button>
-        <button 
-          type="submit" 
+        </SubmitButton>
+        <SubmitButton 
           name="action"
           value="REQUEST_CHANGES"
-          disabled={loading}
-          className="flex-1 bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 font-bold py-3 rounded-xl transition disabled:opacity-50"
+          className="flex-1 bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 font-bold py-3 rounded-xl transition"
+          loadingText="Requesting..."
         >
           Request Changes
-        </button>
-        <button 
-          type="submit" 
+        </SubmitButton>
+        <SubmitButton 
           name="action"
           value="APPROVE"
-          disabled={loading}
-          className="flex-1 bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl transition disabled:opacity-50"
+          className="flex-1 bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl transition"
+          loadingText="Approving..."
         >
           Approve & Grant Skill
-        </button>
+        </SubmitButton>
       </div>
     </form>
   );

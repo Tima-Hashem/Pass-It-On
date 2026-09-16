@@ -61,15 +61,12 @@ export async function createStudentAction(prevState: any, formData: FormData) {
     });
     const skillNamesList = selectedSkills.map(s => s.name);
 
-    // Insert the new user into the database, explicitly setting isAcceptingMentees to false
-    // so they default to being purely a student until they earn a certification.
     // We also map the selectedSkillIds into the UserSkill relation table AND populate the explicit array column.
     await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
-        isAcceptingMentees: false, // Explicitly default to purely a student
         skills: skillNamesList, // Direct array column of skill strings
         userSkills: {
           create: selectedSkillIds.map((skillId) => ({

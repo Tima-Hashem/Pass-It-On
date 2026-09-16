@@ -57,6 +57,28 @@ export async function reviewProjectAsAdmin(projectId: string, formData: FormData
         },
         update: {}
       });
+
+      // 3. Complete the Mentorship
+      await prisma.mentorship.update({
+        where: { id: mentorshipId },
+        data: { status: 'COMPLETED' }
+      });
+
+      // 4. Update the Mentorship Economy (Owed Balances)
+      // Mentee receives a mentorship, they now owe +2
+      await prisma.user.update({
+        where: { id: menteeId },
+        data: { mentorshipsOwed: { increment: 2 } }
+      });
+
+      // Mentor provided a mentorship, they owe -1 (we can enforce a floor in code if needed, but Prisma atomic decrement is easy. Let's fetch current to prevent negative)
+      const mentorData = await prisma.user.findUnique({ where: { id: updatedProject.mentorship.mentorId }, select: { mentorshipsOwed: true } });
+      if (mentorData && mentorData.mentorshipsOwed > 0) {
+        await prisma.user.update({
+          where: { id: updatedProject.mentorship.mentorId },
+          data: { mentorshipsOwed: { decrement: 1 } }
+        });
+      }
     }
 
     revalidatePath('/admin/project-review');

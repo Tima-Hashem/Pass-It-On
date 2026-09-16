@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { loginAction } from './actions';
+import SubmitButton from '@/components/ui/SubmitButton';
 
 /**
  * LoginForm Component
@@ -63,24 +64,11 @@ export default function LoginForm() {
         />
       </div>
       
-      {/* 
-        SUBMIT BUTTON 
-        We disable this button when `isPending` is true to prevent double-submissions.
-        We also render a CSS loading spinner inside it if `isPending` is true.
-      */}
-      <button 
-        type="submit" 
-        disabled={isPending}
-        className="w-full bg-slate-900 text-white p-3 rounded-md font-semibold hover:bg-slate-800 transition-colors disabled:bg-slate-700 flex justify-center items-center"
+      <SubmitButton 
+        className="w-full bg-slate-900 text-white p-3 rounded-md font-semibold hover:bg-slate-800 transition-colors disabled:bg-slate-700"
       >
-        {isPending ? (
-          /* Loading Spinner UI */
-          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-        ) : (
-          /* Default Text */
-          'Sign In'
-        )}
-      </button>
+        Sign In
+      </SubmitButton>
     </form>
   );
 }

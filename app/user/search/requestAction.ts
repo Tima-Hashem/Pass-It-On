@@ -24,6 +24,16 @@ export async function requestMentorship(mentorId: string, skillId: string) {
   }
 
   try {
+    // 1.5 Check the Mentorship Economy rule
+    const user = await prisma.user.findUnique({
+      where: { id: menteeId },
+      select: { mentorshipsOwed: true }
+    });
+
+    if (user && user.mentorshipsOwed > 1) {
+      return { error: `You must mentor ${user.mentorshipsOwed} more students before you can request another mentorship.` };
+    }
+
     // 2. Check if a request already exists between these two for this skill
     const existing = await prisma.mentorshipRequest.findUnique({
       where: {

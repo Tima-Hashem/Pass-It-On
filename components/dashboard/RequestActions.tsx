@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { updateRequestStatus } from '@/app/user/dashboard/actions';
+import SubmitButton from '@/components/ui/SubmitButton';
 
 export default function RequestActions({ requestId }: { requestId: string }) {
-  const [loadingAction, setLoadingAction] = useState<'ACCEPT' | 'REJECT' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleAction = async (action: 'ACCEPT' | 'REJECT') => {
-    setLoadingAction(action);
+  const handleFormAction = async (formData: FormData) => {
     setError(null);
+    const action = formData.get('action') as 'ACCEPT' | 'REJECT';
     try {
       const result = await updateRequestStatus(requestId, action);
       if (result.error) {
@@ -17,30 +17,30 @@ export default function RequestActions({ requestId }: { requestId: string }) {
       }
     } catch (err) {
       setError('An unexpected error occurred.');
-    } finally {
-      setLoadingAction(null);
     }
   };
 
   return (
-    <div>
+    <form action={handleFormAction}>
       <div className="flex gap-3">
-        <button
-          onClick={() => handleAction('ACCEPT')}
-          disabled={loadingAction !== null}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg transition-colors disabled:bg-emerald-400"
+        <SubmitButton
+          name="action"
+          value="ACCEPT"
+          loadingText="..."
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg transition-colors"
         >
-          {loadingAction === 'ACCEPT' ? '...' : 'Accept'}
-        </button>
-        <button
-          onClick={() => handleAction('REJECT')}
-          disabled={loadingAction !== null}
-          className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 rounded-lg transition-colors disabled:bg-slate-100 disabled:text-slate-400"
+          Accept
+        </SubmitButton>
+        <SubmitButton
+          name="action"
+          value="REJECT"
+          loadingText="..."
+          className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 rounded-lg transition-colors"
         >
-          {loadingAction === 'REJECT' ? '...' : 'Reject'}
-        </button>
+          Reject
+        </SubmitButton>
       </div>
       {error && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
-    </div>
+    </form>
   );
 }

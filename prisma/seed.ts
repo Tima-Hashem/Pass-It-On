@@ -76,8 +76,7 @@ async function main() {
       email: 'yousef-student@gmail.com',
       name: 'Yousef Student',
       passwordHash: hashedYousefStudentPass,
-      bio: 'I am Yousef the student, ready to learn and mentor!',
-      isAcceptingMentees: true,
+      bio: 'I am Yousef the student, ready to learn and mentor!'
     }
   })
   users.push(yousefStudent)
@@ -90,16 +89,12 @@ async function main() {
     const password = `${firstName.toLowerCase()}123`
     const passwordHash = await bcrypt.hash(password, 10)
     
-    // ~50% chance to be a mentor
-    const isMentor = Math.random() > 0.5 
-
     const user = await prisma.user.create({
       data: {
         email,
         name: `${firstName} ${lastName}`,
         passwordHash,
-        bio: `Hi, I am ${firstName}! I love tech and building cool things.`,
-        isAcceptingMentees: isMentor,
+        bio: `Hi, I am ${firstName}! I love tech and building cool things.`
       },
     })
     users.push(user)
@@ -107,7 +102,8 @@ async function main() {
   console.log('Created 50 interconnected users')
 
   // 4. Assign Skills and create Mentorship Connections
-  const mentors = users.filter(u => u.isAcceptingMentees)
+  // Now everyone can be a mentor if they have skills
+  const mentors = users;
   
   for (const user of users) {
     // Assign 2 to 4 random skills per user

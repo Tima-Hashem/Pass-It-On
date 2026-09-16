@@ -15,7 +15,6 @@ import prisma from '@/lib/prisma';
 export async function fetchMentorsBySkill(skillId: string, skip: number = 0, take: number = 10) {
   const mentors = await prisma.user.findMany({
     where: {
-      isAcceptingMentees: true,
       userSkills: {
         some: { skillId }
       }

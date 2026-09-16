@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { submitProject, reviewProject } from './actions';
+import SubmitButton from '@/components/ui/SubmitButton';
 
 interface WorkspaceFormsProps {
   mode: 'SUBMIT' | 'REVIEW';
@@ -11,11 +12,9 @@ interface WorkspaceFormsProps {
 }
 
 export default function WorkspaceForms({ mode, mentorshipId, projectId, initialData }: WorkspaceFormsProps) {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleAction(formData: FormData) {
-    setLoading(true);
     setError(null);
 
     let result;
@@ -32,8 +31,6 @@ export default function WorkspaceForms({ mode, mentorshipId, projectId, initialD
     if (result?.error) {
       setError(result.error);
     }
-    
-    setLoading(false);
   }
 
   if (mode === 'SUBMIT') {
@@ -112,17 +109,12 @@ export default function WorkspaceForms({ mode, mentorshipId, projectId, initialD
           ></textarea>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition disabled:opacity-50"
+        <SubmitButton
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition"
+          loadingText="Submitting..."
         >
-          {loading
-            ? "Submitting..."
-            : initialData
-              ? "Resubmit Project"
-              : "Submit Final Project"}
-        </button>
+          {initialData ? "Resubmit Project" : "Submit Final Project"}
+        </SubmitButton>
       </form>
     );
   }
@@ -144,24 +136,22 @@ export default function WorkspaceForms({ mode, mentorshipId, projectId, initialD
       </div>
 
       <div className="flex gap-4">
-        <button 
-          type="submit" 
+        <SubmitButton 
           name="action"
           value="REQUEST_CHANGES"
-          disabled={loading}
-          className="flex-1 bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 font-bold py-4 rounded-xl transition disabled:opacity-50"
+          className="flex-1 bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 font-bold py-4 rounded-xl transition"
+          loadingText="Requesting..."
         >
           Request Changes
-        </button>
-        <button 
-          type="submit" 
+        </SubmitButton>
+        <SubmitButton 
           name="action"
           value="APPROVE"
-          disabled={loading}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition disabled:opacity-50"
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition"
+          loadingText="Approving..."
         >
           Approve Project
-        </button>
+        </SubmitButton>
       </div>
     </form>
   );

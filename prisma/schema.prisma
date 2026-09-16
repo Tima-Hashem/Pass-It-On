@@ -21,7 +21,7 @@ model User {
   name                String
   passwordHash        String
   bio                 String?
-  isAcceptingMentees  Boolean             @default(false)
+  mentorshipsOwed     Int                 @default(0)
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   skills              String[]            @default([])
@@ -75,6 +75,7 @@ model Mentorship {
   menteeId  String
   mentorId  String
   skillId   String
+  status    MentorshipStatus    @default(ACTIVE)
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
   cert      Certification?
@@ -128,4 +129,9 @@ enum RequestStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum MentorshipStatus {
+  ACTIVE
+  COMPLETED
 }

@@ -57,13 +57,13 @@ export default async function AdminDashboardPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {u.isAcceptingMentees ? (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    {u.userSkills && u.userSkills.length > 0 ? (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800">
                         Mentor
                       </span>
                     ) : (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                        Student
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        Learner
                       </span>
                     )}
                   </td>

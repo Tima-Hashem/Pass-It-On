@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSession, logout } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import Footer from '@/components/navigation/Footer';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -48,6 +49,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {children}
       </main>
+      <Footer />
     </div>
   );
 }

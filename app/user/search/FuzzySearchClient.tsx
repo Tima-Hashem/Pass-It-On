@@ -1,6 +1,6 @@
 'use client'; // Client Component for interactivity and hooks
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import Fuse from 'fuse.js';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -32,6 +32,9 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
   // ---------------------------------------------------------------------------
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // useTransition allows us to track the loading state of server navigations
+  const [isPending, startTransition] = useTransition();
   
   // We read the current skillId from the URL to visually highlight the active selection
   const currentSkillId = searchParams.get('skillId');
@@ -73,7 +76,9 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
    * which triggers the server component (page.tsx) to fetch the mentors for that skill.
    */
   const handleSelectSkill = (skillId: string) => {
-    router.push(`/user/search?skillId=${skillId}`);
+    startTransition(() => {
+      router.push(`/user/search?skillId=${skillId}`);
+    });
   };
 
   // ---------------------------------------------------------------------------
@@ -144,12 +149,14 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
                 <button
                   key={skill.id}
                   onClick={() => handleSelectSkill(skill.id)}
+                  disabled={isPending}
                   className={`
                     text-left p-4 rounded-xl border transition-all duration-200 shadow-sm
                     ${isSelected 
                       ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' // Highlight state
                       : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md' // Default state
                     }
+                    ${isPending ? 'opacity-75 cursor-not-allowed' : ''}
                   `}
                 >
                   <h4 className={`font-bold text-lg ${isSelected ? 'text-blue-900' : 'text-slate-800'}`}>
@@ -164,6 +171,17 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
           </div>
         )}
       </div>
+
+      {/* LOADING ANIMATION */}
+      {isPending && (
+        <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col items-center justify-center space-y-4">
+          <svg className="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-slate-500 font-medium animate-pulse">Searching global network for available mentors...</p>
+        </div>
+      )}
     </div>
   );
 }
