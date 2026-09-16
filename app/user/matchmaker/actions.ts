@@ -525,19 +525,49 @@ function buildFallbackResponse(
   },
   mentorshipOwedNotice?: string
 ): MatchmakerResponse {
-  const normalizedInput = userMessage.toLowerCase();
+  const input = userMessage.toLowerCase();
+
+  const aliases: Record<string, string[]> = {
+    'machine learning': ['ml'],
+    'artificial intelligence': ['ai'],
+    'generative ai': ['gen ai', 'genai'],
+    'natural language processing': ['nlp'],
+    'computer vision': ['cv'],
+    'react': ['reactjs', 'react.js'],
+    'next.js': ['nextjs', 'next js'],
+    'node.js': ['nodejs', 'node js'],
+    'postgresql': ['postgres', 'postgres db'],
+    'typescript': ['ts'],
+    'javascript': ['js'],
+    'kubernetes': ['k8s'],
+    'web development': [
+      'frontend',
+      'front end',
+      'frontend development',
+      'backend',
+      'back end',
+      'web application',
+      'web app'
+    ]
+  };
+
+  function matchesSkill(skillName: string): boolean {
+    const normalizedSkill = skillName.toLowerCase();
+
+    if (input.includes(normalizedSkill)) {
+      return true;
+    }
+
+    const skillAliases = aliases[normalizedSkill] || [];
+
+    return skillAliases.some((alias) => input.includes(alias));
+  }
 
   const candidates = mentors
     .map((mentor) => {
-      const matchingSkills = mentor.skills.filter((skill) => {
-        const skillName = skill.name.toLowerCase();
-
-        return (
-          normalizedInput.includes(skillName) ||
-          (skill.description &&
-            normalizedInput.includes(skill.description.toLowerCase()))
-        );
-      });
+      const matchingSkills = mentor.skills.filter((skill) =>
+        matchesSkill(skill.name)
+      );
 
       return {
         mentor,
@@ -560,9 +590,9 @@ function buildFallbackResponse(
         name: skill.name
       })),
       matchScore: 90,
-      matchReason: `This mentor has registered expertise in ${matchingSkills
+      matchReason: `This mentor has registered skills in ${matchingSkills
         .map((skill) => skill.name)
-        .join(', ')}, which directly matches part of your request.`
+        .join(', ')}, which directly relates to your request.`
     })
   );
 
@@ -578,7 +608,7 @@ function buildFallbackResponse(
   return {
     text: `I found ${recommendations.length} mentor${
       recommendations.length === 1 ? '' : 's'
-    } whose registered skills directly match your request.`,
+    } whose registered skills match your request.`,
     recommendations,
     mentorshipOwedNotice
   };
