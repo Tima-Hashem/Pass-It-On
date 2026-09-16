@@ -150,7 +150,7 @@ export async function getAIResponse(
       id: user.id,
       name: user.name,
       bio: user.bio,
-      skills: user.userSkills.map((us) => ({
+      skills: user.userSkills.map((us: any) => ({
         id: us.skill.id,
         name: us.skill.name,
         description: us.skill.description
@@ -187,7 +187,7 @@ export async function getAIResponse(
     // ------------------------------------------------------------
 
     const learnerSkills = currentUser.userSkills.map(
-      (userSkill) => userSkill.skill.name
+      (userSkill: any) => userSkill.skill.name
     );
 
     const learnerContext = {
@@ -219,7 +219,7 @@ export async function getAIResponse(
       id: mentor.id,
       name: mentor.name,
       bio: mentor.bio,
-      skills: mentor.skills.map((skill) => skill.name)
+      skills: mentor.skills.map((skill: any) => skill.name)
     }));
 
     const recentHistory = messageHistory.slice(-6);
