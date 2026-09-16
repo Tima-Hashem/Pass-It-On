@@ -44,21 +44,21 @@ export default async function WorkspacePage({ params }: { params: Promise<{ id: 
   const project = mentorship.projects[0]; // Get the latest project submission (if any)
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-8 pb-10 sm:pb-20">
       
       {/* HEADER SECTION */}
-      <div className="bg-slate-900 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-x-1/2 translate-y-1/2"></div>
+      <div className="bg-slate-900 rounded-3xl p-5 sm:p-8 md:p-12 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
+        <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-x-1/2 translate-y-1/2"></div>
         
-        <div className="relative z-10 space-y-4 text-center md:text-left">
-          <Link href="/user/dashboard" className="text-indigo-300 hover:text-white transition-colors text-sm font-semibold uppercase tracking-wider flex items-center justify-center md:justify-start gap-1">
+        <div className="relative z-10 space-y-3 sm:space-y-4 text-center md:text-left">
+          <Link href="/user/dashboard" className="text-indigo-300 hover:text-white transition-colors text-xs sm:text-sm font-semibold uppercase tracking-wider flex items-center justify-center md:justify-start gap-1">
             &larr; Back to Dashboard
           </Link>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
             {mentorship.skill.name} Workspace
           </h1>
-          <p className="text-slate-300 text-lg max-w-xl">
+          <p className="text-slate-300 text-sm sm:text-lg max-w-xl">
             {isMentor 
               ? `Review and guide ${counterpart.name}'s final project submission.` 
               : `Submit your final project to ${counterpart.name} for review.`
@@ -66,22 +66,22 @@ export default async function WorkspacePage({ params }: { params: Promise<{ id: 
           </p>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 min-w-[200px]">
+        <div className="relative z-10 flex flex-col items-center bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-2xl border border-white/10 min-w-[160px] sm:min-w-[200px]">
           <Avatar name={counterpart.name} />
-          <h3 className="mt-4 font-bold text-xl">{counterpart.name}</h3>
-          <p className="text-indigo-200 text-sm font-semibold uppercase tracking-widest mt-1">
+          <h3 className="mt-3 sm:mt-4 font-bold text-lg sm:text-xl">{counterpart.name}</h3>
+          <p className="text-indigo-200 text-[10px] sm:text-sm font-semibold uppercase tracking-widest mt-1">
             {isMentor ? 'Your Student' : 'Your Mentor'}
           </p>
         </div>
       </div>
 
       {/* STATUS & CONTENT SECTION */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 md:p-12">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 sm:p-8 md:p-12">
         {!project ? (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900 border-b pb-4">Project Submission</h2>
+          <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 border-b pb-3 sm:pb-4">Project Submission</h2>
             {isMentor ? (
-              <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+              <div className="text-center py-10 sm:py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
                 <svg className="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

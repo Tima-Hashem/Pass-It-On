@@ -41,7 +41,7 @@ export default async function AdminDashboardPage() {
       {/* Recent Users List */}
       <div className="col-span-1 md:col-span-2">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Students</h2>
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="bg-white shadow rounded-lg overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>

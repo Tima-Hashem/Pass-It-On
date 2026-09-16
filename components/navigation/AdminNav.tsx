@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { handleLogout } from './actions';
 import SubmitButton from '@/components/ui/SubmitButton';
 
-export default function UserNav() {
+export default function AdminNav() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -20,7 +20,6 @@ export default function UserNav() {
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
-  // Helper to check if a link is currently active
   const isActive = (path: string) => pathname?.startsWith(path);
 
   return (
@@ -28,58 +27,31 @@ export default function UserNav() {
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            
-            {/* Custom Brand Logo */}
-            <Link href="/user/dashboard" className="flex-shrink-0 flex items-center gap-2 sm:gap-3 group">
-              <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-75 overflow-hidden">
-                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-75"></div>
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white transform group-hover:scale-110 transition-transform duration-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 tracking-tight">
-                PassItOn
-              </span>
+            <Link href="/admin/dashboard" className="flex-shrink-0 flex items-center">
+              <span className="text-xl font-bold text-white tracking-tight">PassItOn <span className="text-indigo-400">Admin</span></span>
             </Link>
-
-            {/* Desktop Navigation Links */}
-            <div className="hidden sm:ml-10 sm:flex sm:space-x-2">
+            
+            <div className="hidden sm:ml-10 sm:flex sm:space-x-4">
               <Link 
-                href="/user/dashboard" 
-                className={`inline-flex items-center px-4 py-2 mt-1 rounded-xl text-sm font-bold transition-all duration-75 ${
-                  isActive('/user/dashboard') 
-                    ? 'bg-slate-800 text-indigo-400 shadow-inner' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                href="/admin/dashboard" 
+                className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-75 ${
+                  isActive('/admin/dashboard') ? 'bg-slate-800 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                Dashboard
+                User Management
               </Link>
               <Link 
-                href="/user/search" 
-                className={`inline-flex items-center px-4 py-2 mt-1 rounded-xl text-sm font-bold transition-all duration-75 ${
-                  isActive('/user/search') 
-                    ? 'bg-slate-800 text-indigo-400 shadow-inner' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                href="/admin/project-review" 
+                className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-75 ${
+                  isActive('/admin/project-review') ? 'bg-slate-800 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                Search Skills
-              </Link>
-              <Link 
-                href="/user/profile" 
-                className={`inline-flex items-center px-4 py-2 mt-1 rounded-xl text-sm font-bold transition-all duration-75 ${
-                  isActive('/user/profile') 
-                    ? 'bg-slate-800 text-indigo-400 shadow-inner' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                }`}
-              >
-                Profile
+                Project Review
               </Link>
               <Link 
                 href="/support" 
-                className={`inline-flex items-center px-4 py-2 mt-1 rounded-xl text-sm font-bold transition-all duration-75 ${
-                  isActive('/support') 
-                    ? 'bg-slate-800 text-indigo-400 shadow-inner' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-75 ${
+                  isActive('/support') ? 'bg-slate-800 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 }`}
               >
                 Support
@@ -96,22 +68,15 @@ export default function UserNav() {
                 Logout
               </SubmitButton>
             </form>
-            
-            {/* Mobile menu button */}
+
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="sm:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors duration-75"
             >
               <span className="sr-only">Open main menu</span>
-              {isMobileMenuOpen ? (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
+              <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
           </div>
         </div>
@@ -132,8 +97,8 @@ export default function UserNav() {
         }`}
       >
         <div className="flex items-center justify-between px-4 h-16 border-b border-slate-800 flex-shrink-0">
-          <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 tracking-tight">
-            Menu
+          <span className="text-xl font-bold text-white tracking-tight">
+            PassItOn <span className="text-indigo-400">Admin</span>
           </span>
           <button
             onClick={() => setIsMobileMenuOpen(false)}
@@ -148,45 +113,28 @@ export default function UserNav() {
 
         <div className="px-4 py-6 space-y-2 flex-1 overflow-y-auto">
           <Link 
-            href="/user/dashboard" 
+            href="/admin/dashboard" 
             onClick={() => setIsMobileMenuOpen(false)}
             className={`block px-4 py-3 rounded-xl text-base font-bold transition-all duration-75 ${
-              isActive('/user/dashboard') 
-                ? 'bg-slate-800 text-indigo-400' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              isActive('/admin/dashboard') ? 'bg-slate-800 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            Dashboard
+            User Management
           </Link>
           <Link 
-            href="/user/search" 
+            href="/admin/project-review" 
             onClick={() => setIsMobileMenuOpen(false)}
             className={`block px-4 py-3 rounded-xl text-base font-bold transition-all duration-75 ${
-              isActive('/user/search') 
-                ? 'bg-slate-800 text-indigo-400' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              isActive('/admin/project-review') ? 'bg-slate-800 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            Search Skills
-          </Link>
-          <Link 
-            href="/user/profile" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`block px-4 py-3 rounded-xl text-base font-bold transition-all duration-75 ${
-              isActive('/user/profile') 
-                ? 'bg-slate-800 text-indigo-400' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            Profile
+            Project Review
           </Link>
           <Link 
             href="/support" 
             onClick={() => setIsMobileMenuOpen(false)}
             className={`block px-4 py-3 rounded-xl text-base font-bold transition-all duration-75 ${
-              isActive('/support') 
-                ? 'bg-slate-800 text-indigo-400' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              isActive('/support') ? 'bg-slate-800 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
             Support

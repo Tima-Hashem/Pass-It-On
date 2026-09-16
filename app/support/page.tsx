@@ -14,17 +14,17 @@ interface Message {
   content: string;
 }
 
-export default function MatchmakerPage() {
+export default function SupportPage() {
   // ---------------------------------------------------------------------------
   // STATE MANAGEMENT
   // ---------------------------------------------------------------------------
   
-  // Stores the entire conversation history. We initialize it with a greeting from the AI.
+  // `messages` holds the full conversation history. We initialize it with a friendly greeting.
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
+      id: '0',
       role: 'assistant',
-      content: "Hi! I'm your AI Matchmaker. Tell me a bit about what you want to learn, your current skill level, and any specific goals you have. I'll help pair you with the perfect mentor!"
+      content: "Hi! I'm the Platform Support AI. How can I help you today? I can assist with finding your way around, explaining how mentorships work, or answering technical questions about the platform."
     }
   ]);
   
@@ -104,22 +104,22 @@ export default function MatchmakerPage() {
   // RENDER UI
   // ---------------------------------------------------------------------------
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] max-w-4xl mx-auto bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-140px)] max-w-4xl mx-auto bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden mt-4">
       
       {/* --- HEADER --- */}
       <div className="bg-slate-900 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Back Button */}
-          <Link href="/user/search" className="text-slate-400 hover:text-white transition-colors">
+          {/* Back Button (using history.back) */}
+          <button onClick={() => window.history.back()} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
             <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-          </Link>
+          </button>
           <h1 className="text-lg sm:text-xl font-bold text-white flex items-center gap-1.5 sm:gap-2">
             <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            AI Matchmaker
+            Support AI
           </h1>
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function MatchmakerPage() {
                 ) : (
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md">
                     <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
                 )}
@@ -164,7 +164,7 @@ export default function MatchmakerPage() {
           <div className="flex gap-3 sm:gap-4 flex-row">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white opacity-50 animate-pulse">
                <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                </svg>
             </div>
             <div className="bg-white border border-slate-200 text-slate-500 rounded-2xl rounded-tl-sm p-3 sm:p-4 shadow-sm flex items-center gap-1.5 sm:gap-2">
@@ -184,7 +184,7 @@ export default function MatchmakerPage() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             disabled={isLoading}
-            placeholder={isLoading ? "AI is thinking..." : "Describe what you want to learn..."}
+            placeholder={isLoading ? "AI is thinking..." : "Ask a question about the platform..."}
             className="w-full bg-slate-50 border border-slate-300 rounded-full py-3 sm:py-4 pl-4 sm:pl-6 pr-14 sm:pr-16 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
           />
           <button
@@ -198,7 +198,7 @@ export default function MatchmakerPage() {
           </button>
         </form>
         <p className="text-center text-[10px] sm:text-xs text-slate-400 mt-2 sm:mt-3 px-2">
-          AI Matchmaker can make mistakes. Verify mentor profiles before committing.
+          Support AI provides general guidance. For account issues, contact an admin directly.
         </p>
       </div>
       

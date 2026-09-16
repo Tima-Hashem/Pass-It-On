@@ -135,7 +135,7 @@ export default function WorkspaceForms({ mode, mentorshipId, projectId, initialD
         ></textarea>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <SubmitButton 
           name="action"
           value="REQUEST_CHANGES"

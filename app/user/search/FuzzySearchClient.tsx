@@ -77,7 +77,7 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
    */
   const handleSelectSkill = (skillId: string) => {
     startTransition(() => {
-      router.push(`/user/search?skillId=${skillId}`);
+      router.push(`/user/search?skillId=${skillId}#mentors-section`);
     });
   };
 
@@ -91,7 +91,7 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
         We wrap the search input and the new Matchmaker button in a flex container.
         On small screens (mobile), they stack vertically (flex-col). On larger screens (sm:flex-row), they sit side-by-side.
       */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         
         {/* Search Input Container - takes up remaining space (flex-1) */}
         <div className="relative flex-1">
@@ -102,10 +102,10 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. React, Python, Figma..." 
-            className="w-full border border-slate-300 p-4 rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm text-lg pl-4 pr-12"
+            className="w-full border border-slate-300 p-3 sm:p-4 rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm text-base sm:text-lg pl-4 pr-12"
           />
-          <div className="absolute right-4 top-4 text-slate-400 pointer-events-none">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="absolute right-4 top-3 sm:top-4 text-slate-400 pointer-events-none">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -118,7 +118,7 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
         */}
         <button
           onClick={() => router.push('/user/matchmaker')}
-          className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg px-8 py-4 rounded-xl shadow-md transition-all hover:shadow-lg flex-shrink-0 cursor-pointer"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-base sm:text-lg px-4 py-3 sm:px-8 sm:py-4 rounded-xl shadow-md transition-all hover:shadow-lg flex-shrink-0 cursor-pointer"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -133,14 +133,14 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
         Displays the filtered skills as selectable cards.
       */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+        <h3 className="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3">
           {query ? 'Search Results (Top 5)' : 'Suggested Skills'}
         </h3>
         
         {searchResults.length === 0 ? (
-          <p className="text-slate-500 py-4">No skills found matching "{query}".</p>
+          <p className="text-slate-500 py-4 text-sm sm:text-base">No skills found matching "{query}".</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {searchResults.map((result) => {
               const skill = result.item;
               const isSelected = currentSkillId === skill.id;
@@ -151,7 +151,7 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
                   onClick={() => handleSelectSkill(skill.id)}
                   disabled={isPending}
                   className={`
-                    text-left p-4 rounded-xl border transition-all duration-200 shadow-sm
+                    text-left p-3 sm:p-4 rounded-xl border transition-all duration-200 shadow-sm
                     ${isSelected 
                       ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' // Highlight state
                       : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md' // Default state
@@ -159,7 +159,7 @@ export default function FuzzySearchClient({ skills }: FuzzySearchClientProps) {
                     ${isPending ? 'opacity-75 cursor-not-allowed' : ''}
                   `}
                 >
-                  <h4 className={`font-bold text-lg ${isSelected ? 'text-blue-900' : 'text-slate-800'}`}>
+                  <h4 className={`font-bold text-base sm:text-lg ${isSelected ? 'text-blue-900' : 'text-slate-800'}`}>
                     {skill.name}
                   </h4>
                   <p className={`text-sm mt-1 line-clamp-2 ${isSelected ? 'text-blue-700' : 'text-slate-500'}`}>

@@ -59,7 +59,7 @@ export default async function SearchPage({
       {/* MENTORS DISPLAY SECTION */}
       {/* This section only populates if a skill is actively selected in the URL */}
       {selectedSkillId && (
-        <div className="mt-12 pt-8 border-t border-slate-200">
+        <div id="mentors-section" className="mt-12 pt-8 border-t border-slate-200 scroll-mt-24">
           <h2 className="text-2xl font-bold text-slate-900 mb-6">
             Mentors for <span className="text-blue-600">{selectedSkill?.name}</span>
           </h2>
