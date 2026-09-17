@@ -18,7 +18,7 @@ if (!session) {
 const user = await prisma.user.findUnique({
   where: { id: session.userId },
   include: {
-    mentorshipsAsStudent: {
+    mentorshipsAsMentee: {
       include: {
         skill: true,
         project: true,
@@ -52,7 +52,7 @@ if (user.role === 'ADMIN') {
     href: '/user/search',
   });
 
-  const studentMentorships = user.mentorshipsAsStudent ?? [];
+  const studentMentorships = user.mentorshipsAsMentee ?? [];
   const mentorMentorships = user.mentorshipsAsMentor ?? [];
 
   if (studentMentorships.length > 0 || mentorMentorships.length > 0) {
@@ -80,7 +80,7 @@ if (user.role === 'ADMIN') {
   throw new Error('Gemini is not configured');
 }
 
-    const studentMentorships = user.mentorshipsAsStudent ?? [];
+    const studentMentorships = user.mentorshipsAsMentee ?? [];
 
 const currentProject =
   studentMentorships.find((m: any) => m.project)?.project ?? null;
