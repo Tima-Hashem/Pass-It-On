@@ -85,6 +85,23 @@ export default async function DashboardPage() {
     },
     orderBy: { updatedAt: 'desc' }
   });
+  // ---------------------------------------------------------------------------
+// DASHBOARD STATISTICS
+// ---------------------------------------------------------------------------
+
+const activeCount = activeMentorships.length;
+
+const certificatesCount = completedMentorships.filter(
+  (m) => m.mentorId !== userId && !!m.cert
+).length;
+
+const owedCount = currentUser?.mentorshipsOwed ?? 0;
+
+const skillsTaughtCount = new Set(
+  [...activeMentorships, ...completedMentorships]
+    .filter((m) => m.mentorId === userId)
+    .map((m) => m.skillId)
+).size;
 
   // ---------------------------------------------------------------------------
   // RENDER UI
@@ -114,6 +131,87 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
+      </div>
+      {/* ---------------------------------------------------------------------------
+          DASHBOARD STATISTICS
+      --------------------------------------------------------------------------- */}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+        {/* Active Mentorships */}
+<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+  <div className="flex items-center justify-between">
+    <div className="text-sm font-medium text-slate-500">
+      Active Mentorships
+    </div>
+    <div className="text-2xl">⚡</div>
+  </div>
+
+  <div className="mt-2 text-3xl font-bold text-slate-900">
+    {activeCount}
+  </div>
+
+  <p className="mt-1 text-xs text-slate-500">
+    Currently in progress
+  </p>
+</div>
+
+        {/* Certificates Earned */}
+<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+  <div className="flex items-center justify-between">
+    <div className="text-sm font-medium text-slate-500">
+      Certificates Earned
+    </div>
+    <div className="text-2xl">🎓</div>
+  </div>
+
+  <div className="mt-2 text-3xl font-bold text-slate-900">
+    {certificatesCount}
+  </div>
+
+  <p className="mt-1 text-xs text-slate-500">
+    Successfully completed
+  </p>
+</div>
+
+        {/* Mentorships Owed */}
+<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+  <div className="flex items-center justify-between">
+    <div className="text-sm font-medium text-slate-500">
+      Mentorships Owed
+    </div>
+    <div className="text-2xl">🤝</div>
+  </div>
+
+  <div className="mt-2 text-3xl font-bold text-slate-900">
+    {owedCount}
+  </div>
+
+  <p className="mt-1 text-xs text-slate-500">
+    {owedCount === 0
+      ? 'All caught up!'
+      : 'Pledged to mentor peers'}
+  </p>
+</div>
+
+        {/* Skills Taught */}
+<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+  <div className="flex items-center justify-between">
+    <div className="text-sm font-medium text-slate-500">
+      Skills Taught
+    </div>
+    <div className="text-2xl">🧑‍🏫</div>
+  </div>
+
+  <div className="mt-2 text-3xl font-bold text-slate-900">
+    {skillsTaughtCount}
+  </div>
+
+  <p className="mt-1 text-xs text-slate-500">
+    Different skills shared
+  </p>
+</div>
+
       </div>
 
       {/* --- ACTIVE MENTORSHIPS --- */}

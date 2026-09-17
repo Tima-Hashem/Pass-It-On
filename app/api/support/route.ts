@@ -21,6 +21,7 @@ const user = await prisma.user.findUnique({
     mentorshipsAsStudent: {
       include: {
         skill: true,
+        project: true,
       },
     },
     mentorshipsAsMentor: {
@@ -30,6 +31,9 @@ const user = await prisma.user.findUnique({
     },
   },
 });
+if (!user) {
+  return new Response('User not found', { status: 404 });
+}
 const suggestedLinks: { label: string; href: string }[] = [];
 
 if (user.role === 'ADMIN') {
@@ -64,9 +68,7 @@ if (user.role === 'ADMIN') {
   }
 }
 
-if (!user) {
-  return new Response('User not found', { status: 404 });
-}
+
 
     if (!userMessage) {
       return new Response('Missing userMessage', { status: 400 });
@@ -75,16 +77,22 @@ if (!user) {
     const ai = getGeminiClient();
 
     if (!ai) {
-      return new Response('Gemini is not configured', { status: 503 });
-    }
+  throw new Error('Gemini is not configured');
+}
 
-    const userContextSummary = `
+    const studentMentorships = user.mentorshipsAsStudent ?? [];
+
+const currentProject =
+  studentMentorships.find((m: any) => m.project)?.project ?? null;
+
+const userContextSummary = `
 Current User:
 - Name: ${user.name}
 - Role: ${user.role}
 - Mentorships Owed to Community: ${user.mentorshipsOwed}
-- Active learning mentorships (as student): ${(user.mentorshipsAsStudent ?? []).length} (${(user.mentorshipsAsStudent ?? []).map((m: any) => `${m.skill.name}: ${m.status}`).join(', ') || 'None'})
+- Active learning mentorships (as student): ${studentMentorships.length} (${studentMentorships.map((m: any) => `${m.skill.name}: ${m.status}`).join(', ') || 'None'})
 - Active mentoring sessions (as mentor): ${(user.mentorshipsAsMentor ?? []).length} (${(user.mentorshipsAsMentor ?? []).map((m: any) => `${m.skill.name}: ${m.status}`).join(', ') || 'None'})
+- Current Project: ${currentProject ? `${currentProject.title} (Status: ${currentProject.status})` : 'None'}
 `;
     const systemInstruction = `You are the friendly, knowledgeable Support AI for "PassItOn", a student skill mentorship platform with a pay-it-forward philosophy.
 
@@ -101,9 +109,11 @@ Your job is to help users understand:
 - Certificates
 - Platform navigation
 
-IMPORTANT:
-- Give factual answers based only on PassItOn platform rules.
-- Do not invent platform features, mentors, users, links, or policies.
+IMPORTANT RULES:
+- Give factual answers based only on the PassItOn platform rules and the current user's provided context.
+- Do not invent platform features, mentors, users, links, policies, deadlines, or requirements.
+- If the information needed to answer a question is not available in the platform rules or user context, say that you are not sure rather than guessing.
+- When appropriate, direct the user to their Dashboard or the relevant platform section.
 - Give clear, practical step-by-step guidance.
 - Be friendly, professional, and concise.
 - You may use Markdown formatting.
@@ -235,29 +245,65 @@ controller.close();
 - Once approved, your digital certificate appears on your profile and dashboard.
 - Each certificate has a unique ID and issue date.`;
     } else if (
-      normalized.includes('matchmaker') ||
-      normalized.includes('find a mentor') ||
-      normalized.includes('find mentor')
-    ) {
+  normalized.includes('matchmaker') ||
+  normalized.includes('find a mentor') ||
+  normalized.includes('find mentor') ||
+  normalized.includes('mentorship request') ||
+  normalized.includes('mentorship requests') ||
+  normalized.includes('make a mentorship request') ||
+  normalized.includes('send a mentorship request') ||
+  normalized.includes('request a mentor')
+) {
+  fallback = `**How to Request a Mentor:**
+
+1. Open the **AI Matchmaker** from your dashboard.
+2. Select the skill you want to learn.
+3. Review the recommended mentors.
+4. Choose a mentor who matches your learning goals.
+5. Click **Request Mentorship** on the mentor's card.
+6. Your mentorship request will be sent to the mentor for review.
+
+You can also browse mentors through the **Mentor Directory**.`;
       fallback = `**Finding the Right Mentor:**
 
 - Use the **AI Matchmaker** to receive mentor recommendations based on your learning goals.
 - You can also use the **Mentor Directory** to browse available mentors and their skills.`;
-    } else {
-      fallback = `Welcome to PassItOn Support!
+    } else if (
+  normalized === 'hello' ||
+  normalized === 'hi' ||
+  normalized === 'hey' ||
+  normalized.startsWith('hello ') ||
+  normalized.startsWith('hi ') ||
+  normalized.startsWith('hey ')
+) {
+  fallback = `Hi! 👋 Welcome to PassItOn Support!
 
 I can help you with:
-
+- **Finding a mentor**
+- **Mentorship requests**
 - **Pay-It-Forward Rules**
 - **Mentorships Owed**
+- **Projects & Workspaces**
+- **Certificates**
+- **AI Matchmaker**
+
+What would you like help with?`;
+    } else {
+  fallback = `I'm not sure about that specific question because it isn't covered by the PassItOn information I have.
+
+I don't want to guess or give you incorrect information.
+
+I can help you with:
+- **Pay-It-Forward Rules**
+- **Mentorships Owed**
+- **Finding Mentors**
 - **Project Submissions**
 - **Workspace & Milestones**
 - **Certificates**
-- **Finding Mentors**
 - **AI Matchmaker**
 
-Ask me what you would like help with.`;
-    }
+You can also check your **Dashboard** for information specific to your account.`;
+}
 
     const encoder = new TextEncoder();
 

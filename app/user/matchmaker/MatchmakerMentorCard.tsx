@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { requestMentorship } from '@/app/user/search/requestAction';
 import { Sparkles, CheckCircle2, AlertCircle, ArrowRight, UserCheck } from 'lucide-react';
 import type { RecommendedMentor } from './actions';
+import CelebrationPopup from '@/components/ui/CelebrationPopup';
 
 interface MatchmakerMentorCardProps {
   mentor: RecommendedMentor;
@@ -24,6 +25,7 @@ export default function MatchmakerMentorCard({ mentor }: MatchmakerMentorCardPro
   );
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const handleSendRequest = async () => {
     if (!selectedSkillId) return;
@@ -39,6 +41,7 @@ export default function MatchmakerMentorCard({ mentor }: MatchmakerMentorCardPro
       } else {
         setStatus('success');
         setStatusMessage('Mentorship request sent! They will see it in their incoming requests.');
+        setShowCelebration(true);
       }
     } catch (err: any) {
       setStatus('error');
@@ -142,6 +145,11 @@ export default function MatchmakerMentorCard({ mentor }: MatchmakerMentorCardPro
           )}
         </button>
       )}
+            <CelebrationPopup
+        isOpen={showCelebration}
+        onClose={() => setShowCelebration(false)}
+      />
     </div>
+    
   );
 }
