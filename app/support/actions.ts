@@ -69,8 +69,8 @@ export async function getSupportAIResponse(
 - Name: ${user.name}
 - Role: ${user.role}
 - Mentorships Owed to Community: ${user.mentorshipsOwed}
-- Active learning mentorships (as student): ${user.mentorshipsAsStudent.length} (${user.mentorshipsAsStudent.map((m: any) => `${m.skill.name}: ${m.status}`).join(', ') || 'None'})
-- Active mentoring sessions (as mentor): ${user.mentorshipsAsMentor.length} (${user.mentorshipsAsMentor.map((m: any) => `${m.skill.name}: ${m.status}`).join(', ') || 'None'})`;
+- - Active learning mentorships (as student): ${(user.mentorshipsAsStudent ?? []).length} (${(user.mentorshipsAsStudent ?? []).map((m: any) => `${m.skill.name}: ${m.status}`).join(', ') || 'None'})
+- Active mentoring sessions (as mentor): ${(user.mentorshipsAsMentor ?? []).length} (${(user.mentorshipsAsMentor ?? []).map((m: any) => `${m.skill.name}: ${m.status}`).join(', ') || 'None'})`;
 
         // Suggest useful navigation paths based on their state
         if (user.role === 'ADMIN') {
@@ -78,10 +78,16 @@ export async function getSupportAIResponse(
         } else {
           suggestedLinks.push({ label: 'My Dashboard', href: '/user/dashboard' });
           suggestedLinks.push({ label: 'Find Mentors', href: '/user/search' });
-          if (user.mentorshipsAsStudent.length > 0 || user.mentorshipsAsMentor.length > 0) {
-            const activeId = user.mentorshipsAsStudent[0]?.id || user.mentorshipsAsMentor[0]?.id;
-            suggestedLinks.push({ label: 'Open Active Workspace', href: `/user/workspace/${activeId}` });
-          }
+          const studentMentorships = user.mentorshipsAsStudent ?? [];
+const mentorMentorships = user.mentorshipsAsMentor ?? [];
+
+if (studentMentorships.length > 0 || mentorMentorships.length > 0) {
+  const activeId = studentMentorships[0]?.id || mentorMentorships[0]?.id;
+  suggestedLinks.push({
+    label: 'Open Active Workspace',
+    href: `/user/workspace/${activeId}`,
+  });
+}
         }
       }
     }
@@ -135,24 +141,58 @@ RESPONSE GUIDELINES:
         parts: [{ text: `${systemInstruction}\n\nUser Question: "${userMessage}"` }],
       });
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents,
-      });
+     let response;
+let lastError;
 
-      return {
-        text: response.text || 'I am here to assist you with any questions about PassItOn!',
-        suggestedLinks,
-      };
+for (let attempt = 1; attempt <= 3; attempt++) {
+  try {
+    response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents,
+    });
+    break;
+  } catch (error: any) {
+    lastError = error;
+
+    // Gemini free quota exhausted → use local fallback immediately.
+    if (error?.status === 429) {
+      break;
+    }
+
+    // Temporary Gemini overload → retry a few times.
+    if (error?.status !== 503 || attempt === 3) {
+      break;
+    }
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, attempt * 1000)
+    );
+  }
+}
+
+if (response) {
+  return {
+    text:
+      response.text ||
+      'I am here to assist you with any questions about PassItOn!',
+    suggestedLinks,
+  };
+}
     }
 
     // -------------------------------------------------------------------------
     // 3. SMART FALLBACK KNOWLEDGE BASE (When GEMINI_API_KEY is not set)
     // -------------------------------------------------------------------------
     const normalized = userMessage.toLowerCase();
-    let text = '';
+let text = '';
 
-    if (normalized.includes('pay it forward') || normalized.includes('rule') || normalized.includes('owed')) {
+if (
+  normalized.includes('pay it forward') ||
+  normalized.includes('owed') ||
+  normalized.includes('owe') ||
+  normalized.includes('community commitment') ||
+  normalized.includes('mentorships owed')
+) {
       text = `**The PassItOn "Pay-It-Forward" Philosophy:**
 
 1. **Free Peer Mentorship:** You receive dedicated 1-on-1 mentorship from an experienced peer at zero financial cost.

@@ -14,6 +14,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 import { getSupportAIResponse, type SupportResponse } from './actions';
 import {
@@ -76,55 +77,151 @@ export default function SupportPage() {
    * Submits user message to the server-side Support AI
    */
   const submitMessage = async (textToSend: string) => {
-    if (!textToSend.trim() || isLoading) return;
+  if (!textToSend.trim() || isLoading) return;
 
-    msgCounterRef.current += 1;
-    const userMsgId = `support-user-${msgCounterRef.current}`;
+  msgCounterRef.current += 1;
 
-    const userMessage: SupportMessage = {
-      id: userMsgId,
-      role: 'user',
-      content: textToSend.trim(),
-    };
-
-    const currentMessages = [...messages, userMessage];
-    setMessages(currentMessages);
-    setInputValue('');
-    setIsLoading(true);
-
-    try {
-      const historyContext = currentMessages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
-
-      const res: SupportResponse = await getSupportAIResponse(userMessage.content, historyContext);
-
-      msgCounterRef.current += 1;
-      const aiMessage: SupportMessage = {
-        id: `support-ai-${msgCounterRef.current}`,
-        role: 'assistant',
-        content: res.text,
-        suggestedLinks: res.suggestedLinks,
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      console.error('Failed to fetch support AI response:', error);
-      msgCounterRef.current += 1;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `support-err-${msgCounterRef.current}`,
-          role: 'assistant',
-          content:
-            "I ran into an issue retrieving the latest platform documentation. Please check your Dashboard or try asking again!",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+  const userMessage: SupportMessage = {
+    id: `support-user-${msgCounterRef.current}`,
+    role: 'user',
+    content: textToSend.trim(),
   };
+
+  const currentMessages = [...messages, userMessage];
+
+  setMessages(currentMessages);
+  setInputValue('');
+  setIsLoading(true);
+
+  msgCounterRef.current += 1;
+
+  const aiMessageId = `support-ai-${msgCounterRef.current}`;
+
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: aiMessageId,
+      role: 'assistant',
+      content: '',
+    },
+  ]);
+
+  try {
+    const historyContext = currentMessages.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+
+    const response = await fetch('/api/support', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userMessage: userMessage.content,
+        messageHistory: historyContext,
+      }),
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error('Support AI streaming request failed');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    let buffer = '';
+    let accumulatedText = '';
+    let suggestedLinks: { label: string; href: string }[] = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      const events = buffer.split('\n\n');
+      buffer = events.pop() || '';
+
+      for (const event of events) {
+        const lines = event.split('\n');
+
+        let eventType = 'message';
+        let data = '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            eventType = line.slice(7).trim();
+          }
+
+          if (line.startsWith('data: ')) {
+            data += line.slice(6);
+          }
+        }
+
+        if (!data) continue;
+
+        const parsed = JSON.parse(data);
+
+        if (eventType === 'links') {
+          if (Array.isArray(parsed)) {
+            suggestedLinks = parsed;
+          }
+          continue;
+        }
+
+        if (typeof parsed === 'string') {
+          accumulatedText += parsed;
+
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? {
+                    ...msg,
+                    content: accumulatedText,
+                  }
+                : msg
+            )
+          );
+        }
+      }
+    }
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === aiMessageId
+          ? {
+              ...msg,
+              content:
+                accumulatedText ||
+                'I am here to assist you with any questions about PassItOn!',
+              suggestedLinks,
+            }
+          : msg
+      )
+    );
+  } catch (error) {
+    console.error(
+      'Failed to fetch streaming support AI response:',
+      error
+    );
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === aiMessageId
+          ? {
+              ...msg,
+              content:
+                'I ran into an issue retrieving the latest platform documentation. Please check your Dashboard or try asking again!',
+            }
+          : msg
+      )
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,7 +301,14 @@ export default function SupportPage() {
                       : 'bg-white border border-slate-200 text-slate-800 rounded-tl-xs'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {!isUser && isLoading && msg.id === messages[messages.length - 1]?.id && (
+  <div className="mb-2 text-sm text-gray-500 animate-pulse">
+    PassItOn AI is responding…
+  </div>
+)}
+                  <div className="max-w-none">
+  <ReactMarkdown>{msg.content}</ReactMarkdown>
+</div>
                 </div>
 
                 {/* Helpful Navigation Badges */}
