@@ -21,7 +21,7 @@ const user = await prisma.user.findUnique({
     mentorshipsAsMentee: {
       include: {
         skill: true,
-        project: true,
+        projects: true,
       },
     },
     mentorshipsAsMentor: {
@@ -83,7 +83,8 @@ if (user.role === 'ADMIN') {
     const studentMentorships = user.mentorshipsAsMentee ?? [];
 
 const currentProject =
-  studentMentorships.find((m: any) => m.project)?.project ?? null;
+  studentMentorships.find((m: any) => m.projects?.length > 0)
+    ?.projects?.[0] ?? null;
 
 const userContextSummary = `
 Current User:
